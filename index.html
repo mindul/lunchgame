@@ -1,114 +1,143 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<title>점심메뉴 룰렛</title>
+<meta charset="utf-8" />
+<title>점심 메뉴 룰렛</title>
+
+<!-- GSAP CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
 <style>
   :root {
-    --size: 400px;           /* 룰렛 지름 */
-    --border: 8px;           /* 테두리 두께 */
+    --size: 480px;          /* 룰렛 지름 한 번에 바꾸려면 여기만 수정 */
   }
-  body {
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    height:100vh; margin:0; font-family:"Pretendard","Segoe UI",sans-serif;
-    background:#f9fafc;
+
+  body{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:32px;
+    min-height:100vh;
+    font-family:system-ui, sans-serif;
+    background:#f7f7f7;
   }
-  #wrapper           { position:relative; width:var(--size); height:var(--size); }
-  #wheel             { width:100%; height:100%; transform:rotate(0deg); }      /* GSAP이 회전 */
-  #pointer           { position:absolute; top:-12px; left:50%; transform:translateX(-50%); 
-                       width:0; height:0; border-left:14px solid transparent; 
-                       border-right:14px solid transparent; border-bottom:26px solid #ff4757;}
-  button             { margin-top:30px; padding:12px 32px; font-size:1.1rem; 
-                       background:#1e90ff; color:#fff; border:0; border-radius:6px; cursor:pointer;}
-  button:disabled    { opacity:.5; cursor:not-allowed; }
+  #wheelBox{
+    width:var(--size);
+    height:var(--size);
+    position:relative;
+  }
+  /* 화살표(포인터) */
+  #pointer{
+    position:absolute;
+    top:-18px;
+    left:50%;
+    width:0;
+    height:0;
+    border-left:16px solid transparent;
+    border-right:16px solid transparent;
+    border-bottom:24px solid #ff5252;
+    transform:translateX(-50%);
+    z-index:10;
+  }
+  button{
+    padding:12px 24px;
+    font-size:1.1rem;
+    border:none;
+    border-radius:6px;
+    background:#2196f3;
+    color:#fff;
+    cursor:pointer;
+  }
+  button:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+  }
 </style>
 </head>
 <body>
 
-<div id="wrapper">
+<h1>오늘 점심 뭐 먹지? 🍽️</h1>
+
+<div id="wheelBox">
   <div id="pointer"></div>
-  <!-- 룰렛은 SVG로 그리기 -->
-  <svg id="wheel" viewBox="-200 -200 400 400"></svg>
+
+  <!-- SVG 룰렛 (JS에서 동적으로 생성) -->
+  <svg id="wheel" viewBox="-1 -1 2 2" style="width:100%;height:100%;transform:rotate(0deg);">
+    <!-- slice <path>들이 여기에 주입 -->
+  </svg>
 </div>
-<button id="spinBtn">Spin!</button>
 
-<script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+<button id="spinBtn">룰렛 돌리기!</button>
+
 <script>
-/* 1) 메뉴 설정 */
-const menuItems = ["돈까스", "라면", "김치찌개", "초밥", "샐러드", "햄버거", "마라탕", "파스타"];
+/* 1) 메뉴 목록만 바꾸면 자동으로 룰렛이 다시 그려집니다 */
+const menus = ["김치찌개", "돈까스", "제육볶음", "짜장면", "쌀국수", "샐러드", "초밥", "햄버거"];
 
-/* 2) 파이 조각 그리기 */
-const wheel   = document.getElementById("wheel");
-const slice   = 360 / menuItems.length;
-const radius  = 200;             // viewBox 반지름
+const wheel     = document.getElementById("wheel");
+const spinBtn   = document.getElementById("spinBtn");
+const sliceDeg  = 360 / menus.length;
 
-menuItems.forEach((label, i) => {
-  const startAngle = slice * i - 90;            // SVG 12시 방향이 -90°
-  const endAngle   = startAngle + slice;
-  
-  // 호의 시작·끝점을 극좌표→직교좌표 변환
-  const x1 = radius * Math.cos(startAngle*Math.PI/180);
-  const y1 = radius * Math.sin(startAngle*Math.PI/180);
-  const x2 = radius * Math.cos(endAngle*Math.PI/180);
-  const y2 = radius * Math.sin(endAngle*Math.PI/180);
-  
-  // path(d) — M(0,0) L(x1,y1) A(rx ry 0 largeArc sweep x2 y2) Z
-  const largeArc = slice > 180 ? 1 : 0;
-  const pathData = `M0,0 L${x1},${y1} A${radius},${radius} 0 ${largeArc},1 ${x2},${y2} Z`;
+/* 2) SVG 파이 슬라이스와 중앙 텍스트 만들기 */
+menus.forEach((label, i) => {
+  const startAngle = i * sliceDeg;
+  const endAngle   = startAngle + sliceDeg;
+  const largeArc   = sliceDeg > 180 ? 1 : 0;
 
-  // slice 색상 팔레트 (HSL로 간단히 생성)
-  const hue = (i * 360 / menuItems.length);
+  /* 호(arc)-끝점 좌표 계산 (단위: 반지름=1) */
+  const start = polarToCartesian(startAngle);
+  const end   = polarToCartesian(endAngle);
+
+  /* 파이-조각 path */
   const path = document.createElementNS("http://www.w3.org/2000/svg","path");
-  path.setAttribute("d", pathData);
-  path.setAttribute("fill", `hsl(${hue}, 80%, 60%)`);
-  path.setAttribute("stroke", "#fff");
-  path.setAttribute("stroke-width", "2");
+  path.setAttribute("d", [
+    `M 0 0`,
+    `L ${start.x} ${start.y}`,
+    `A 1 1 0 ${largeArc} 1 ${end.x} ${end.y}`,
+    `Z`
+  ].join(" "));
+  path.setAttribute("fill", `hsl(${startAngle+sliceDeg/2}, 70%, 60%)`);
   wheel.appendChild(path);
 
-  // 라벨 (중앙 각도에 텍스트 배치)
-  const textAngle = startAngle + slice/2;
-  const tx = (radius*0.6) * Math.cos(textAngle*Math.PI/180);
-  const ty = (radius*0.6) * Math.sin(textAngle*Math.PI/180);
-  const txt = document.createElementNS("http://www.w3.org/2000/svg","text");
-  txt.setAttribute("x", tx);
-  txt.setAttribute("y", ty);
-  txt.setAttribute("text-anchor","middle");
-  txt.setAttribute("dominant-baseline","middle");
-  txt.setAttribute("fill","#ffffff");
-  txt.setAttribute("font-size","18");
-  txt.setAttribute("transform",`rotate(${textAngle+90} ${tx} ${ty})`); // 글자를 바깥쪽을 향하도록
-  txt.textContent = label;
-  wheel.appendChild(txt);
+  /* 가운데 텍스트(살짝 안쪽에 배치) */
+  const midAngle = startAngle + sliceDeg / 2;
+  const mid      = polarToCartesian(midAngle, 0.55);   // 반지름 *0.55 위치
+  const text = document.createElementNS("http://www.w3.org/2000/svg","text");
+  text.textContent = label;
+  text.setAttribute("x", mid.x);
+  text.setAttribute("y", mid.y);
+  text.setAttribute("text-anchor","middle");
+  text.setAttribute("alignment-baseline","middle");
+  text.setAttribute("fill","#000");
+  text.setAttribute("font-size","0.18px");             // SVG viewBox 기준
+  text.setAttribute("transform", `rotate(${midAngle} ${mid.x} ${mid.y})`);
+  wheel.appendChild(text);
 });
 
-/* 3) 회전 로직 */
-let spinning = false;
-const btn = document.getElementById("spinBtn");
-btn.addEventListener("click", () => {
-  if (spinning) return;
-  spinning = true; btn.disabled = true;
-  
-  /* 랜덤 목표 조각 선택 */
-  const targetIndex = Math.floor(Math.random() * menuItems.length);
-  
-  /* 회전각 계산: 여러 바퀴 + 타깃 중앙 정렬 */
-  const spins       = 5 + Math.floor(Math.random()*3);              // 5~7바퀴
-  const finalAngle  = spins*360 + (targetIndex * slice + slice/2);
-  
-  /* 애니메이션 */
+/* 3) 회전 함수 */
+spinBtn.addEventListener("click", () => {
+  spinBtn.disabled = true;
+
+  const chosenIdx  = Math.floor(Math.random() * menus.length);
+  const offsetDeg  = sliceDeg / 2; // 룰렛 위쪽 포인터가 slice 중앙을 가리키도록 보정
+  const targetRot  = 360 * 6 + (360 - chosenIdx * sliceDeg - offsetDeg);
+
   gsap.to(wheel, {
-    rotate: finalAngle,
+    rotation: targetRot,
     duration: 5,
     ease: "power4.out",
     onComplete: () => {
-      const chosen = menuItems[targetIndex];
-      alert(`오늘의 점심은 👉 ${chosen} 👈`);
-      spinning = false; btn.disabled = false;
-      /* 다음 회전 대비 각도 정리 (큰 각도를 0~360°로 줄여 두면 성능 ↑) */
-      gsap.set(wheel, {rotate: finalAngle % 360});
+      alert(`오늘 점심은 ➡️ [ ${menus[chosenIdx]} ]! 😋`);
+      spinBtn.disabled = false;
     }
   });
 });
+
+/* 4) 각도→좌표 변환 헬퍼 */
+function polarToCartesian(angleDeg, radius = 1){
+  const rad = (angleDeg - 90) * Math.PI / 180; // SVG는 12시 방향부터 시계방향
+  return { x: radius * Math.cos(rad), y: radius * Math.sin(rad) };
+}
 </script>
 </body>
 </html>
