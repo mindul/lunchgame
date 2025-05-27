@@ -23,8 +23,8 @@
   <svg id="wheel" viewBox="-1 -1 2 2" style="width:100%;height:100%;"></svg>
 </div>
 
-<button id="spinBtn">돌려!</button>           <!-- ① 버튼 텍스트 수정 -->
-<p id="result"></p>                           <!-- ② 결과 출력 영역 추가 -->
+<button id="spinBtn">돌려!</button>
+<p id="result"></p>
 
 <script>
 const menus = ["김치찌개","돈까스","제육볶음","짜장면","쌀국수","샐러드","초밥","햄버거"];
@@ -47,7 +47,7 @@ menus.forEach((label,i)=>{
   const upright=a=>(a>90&&a<270)?a+180:a;
   const t = docEl('text',{
     x:m.x, y:m.y, 'text-anchor':'middle','alignment-baseline':'middle',
-    fill:'#fff','font-size':'0.18px',
+    fill:'#fff','font-size':'0.09px',              // ★ 글씨 크기 ↓ 절반
     transform:`rotate(${upright(mid)} ${m.x} ${m.y})`
   }, label);
   wheel.appendChild(t);
@@ -55,7 +55,7 @@ menus.forEach((label,i)=>{
 
 /* --- 회전 --- */
 spinBtn.addEventListener('click',()=>{
-  spinBtn.disabled=true; result.textContent='';      // 초기화
+  spinBtn.disabled=true; result.textContent='';
   const pick = Math.floor(Math.random()*menus.length);
   const target = 360*6 + (360 - pick*sliceDeg - sliceDeg/2);
 
