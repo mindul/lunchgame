@@ -8,7 +8,26 @@
   :root { --size: 480px; }
   body{display:flex;flex-direction:column;align-items:center;gap:28px;min-height:100vh;font-family:system-ui,sans-serif;background:#f7f7f7;}
   #wheelBox{width:var(--size);height:var(--size);position:relative;}
-  #pointer{position:absolute;top:-18px;left:50%;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:24px solid #ff5252;transform:translateX(-50%);z-index:10;}
+  /* 기존 #pointer 선언을 이 코드로 교체 */
+  #pointer{
+    position:absolute;
+    /* 삼각형의 윗변(=밑변)이 룰렛 테두리와 겹치고
+       뾰족한 아래쪽이 원 안으로 들어오도록 살짝 내려줍니다. */
+    top:-6px;                 /* 더 깊게 넣고 싶으면 0~양수로 줄여보세요 */
+  
+    left:50%;
+    width:0;
+    height:0;
+  
+    /* 역삼각형: border-top 을 색칠하면 ↓ 방향 */
+    border-left:20px solid transparent;
+    border-right:20px solid transparent;
+    border-top:28px solid #ff5252;   /* 원하는 색상/크기로 조정 가능 */
+  
+    transform:translateX(-50%);
+    z-index:10;
+  }
+
   button{padding:12px 28px;font-size:1.1rem;border:none;border-radius:6px;background:#2196f3;color:#fff;cursor:pointer;}
   button:disabled{opacity:.5;cursor:not-allowed;}
   #result{font-size:1.2rem;font-weight:600;color:#ff5252;min-height:1.2em;}
@@ -16,7 +35,7 @@
 </head>
 <body>
 
-<h1>오늘 점심 뭐 먹지? 🍽️</h1>
+<h1>오늘 점심 뭐 먹지?</h1>
 
 <div id="wheelBox">
   <div id="pointer"></div>
