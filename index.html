@@ -73,18 +73,26 @@ menus.forEach((label,i)=>{
 });
 
 /* --- 회전 --- */
-spinBtn.addEventListener('click',()=>{
-  spinBtn.disabled=true; result.textContent='';
-  const pick = Math.floor(Math.random()*menus.length);
-  const target = 360*6 + (360 - pick*sliceDeg - sliceDeg/2);
+spinBtn.addEventListener('click', ()=>{
+  spinBtn.disabled = true;
+  result.textContent = '';
+
+  const pick         = Math.floor(Math.random() * menus.length);   // 고를 메뉴
+  const sliceCenter  = 360 - pick * sliceDeg - sliceDeg / 2;       // 0~360 목표 각
+  const nowMod360    = (gsap.getProperty(wheel, 'rotation') % 360 + 360) % 360;
+
+  /* 최소 6바퀴(=2160°) + 목표 칸까지 추가 회전량 계산 */
+  const extraSpins   = 6 * 360;
+  const toTargetDiff = (sliceCenter - nowMod360 + 360) % 360;      // 0~359 양수
+  const delta        = extraSpins + toTargetDiff;                  // 최종 상대 회전량
 
   gsap.to(wheel,{
-    rotation:target,
-    duration:5,
-    ease:'power4.out',
-    onComplete:()=>{
-      result.textContent=`오늘 점심은 👉 ${menus[pick]} 👈`;
-      spinBtn.disabled=false;
+    rotation: "+=" + delta,        // ★ 상대 회전(+=)으로 전달
+    duration: 5,
+    ease: 'power4.out',
+    onComplete: () => {
+      result.textContent = `오늘 점심은 👉 ${menus[pick]} 👈`;
+      spinBtn.disabled = false;
     }
   });
 });
