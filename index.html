@@ -66,7 +66,7 @@ menus.forEach((label,i)=>{
   const upright=a=>(a>90&&a<270)?a+180:a;
   const t = docEl('text',{
     x:m.x, y:m.y, 'text-anchor':'middle','alignment-baseline':'middle',
-    fill:'#fff','font-size':'0.03px',              // ★ 글씨 크기 ↓ 절반
+    fill:'#fff','font-size':'0.07px',              // ★ 글씨 크기 ↓ 절반
     transform:`rotate(${upright(mid)} ${m.x} ${m.y})`
   }, label);
   wheel.appendChild(t);
