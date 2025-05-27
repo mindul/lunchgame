@@ -82,7 +82,7 @@ spinBtn.addEventListener('click', ()=>{
   const nowMod360    = (gsap.getProperty(wheel, 'rotation') % 360 + 360) % 360;
 
   /* 최소 6바퀴(=2160°) + 목표 칸까지 추가 회전량 계산 */
-  const extraSpins   = 6 * 360;
+  const extraSpins   = 10 * 360;
   const toTargetDiff = (sliceCenter - nowMod360 + 360) % 360;      // 0~359 양수
   const delta        = extraSpins + toTargetDiff;                  // 최종 상대 회전량
 
